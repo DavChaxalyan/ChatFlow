@@ -1,11 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
-import createSagaMiddleware from 'redux-saga';
+import authReducer from './slices/authSlice';
+import chatReducer from './slices/chatSlice';
 
-const sagaMiddleware = createSagaMiddleware();
-
-const store = configureStore({
-  reducer: {},
-  middleware: [sagaMiddleware],
+export const store = configureStore({
+  reducer: {
+    auth: authReducer,
+    chat: chatReducer,
+  },
 });
-
-export default store;

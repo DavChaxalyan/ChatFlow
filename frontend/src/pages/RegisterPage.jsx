@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { RegisterUser } from '../redux/slices/authSlice';
 import { useDispatch } from 'react-redux';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 export default function RegisterPage() {
@@ -17,7 +17,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
     try {
-      await axios.post('/api/auth/register', form);
+      dispatch(RegisterUser(form))
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');

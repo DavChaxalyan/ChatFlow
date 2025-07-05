@@ -1,15 +1,22 @@
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/slices/authSlice';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
+  const { token } = useSelector((state) => state.auth);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(loginUser(form));
   };
+
+  useEffect(() => {
+    if (token) navigate('/chat');
+  }, [token, navigate]);
 
   return (
     <div className="p-10 max-w-md mx-auto">

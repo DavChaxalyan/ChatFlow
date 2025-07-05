@@ -23,12 +23,14 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
+app.use('/api', require('./routes/userRoutes'));
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('sendMessage', ({ chatId, senderId, text }) => {
-    io.emit('receiveMessage', { chatId, senderId, text }); // на фронте поймаем это
+    io.emit('receiveMessage', { chatId, senderId, text });
   });
 
   socket.on('disconnect', () => {

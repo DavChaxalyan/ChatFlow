@@ -1,10 +1,14 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import ProfilePanel from '../components/ProfilePanel';
+import ChatInput from '../components/ChatInput';
 import {
   fetchUsers,
   accessChat,
   fetchMessages,
   sendMessages,
+  uploadFileMessage,
+  sendMessageWithFile,
 } from '../redux/slices/chatSlice';
 import { logout } from '../redux/slices/authSlice';
 import { FiMenu, FiLogOut, FiUser, FiSettings, FiMessageSquare } from 'react-icons/fi';
@@ -13,8 +17,8 @@ import socket from '../socket';
 export default function ChatPage() {
   const dispatch = useDispatch();
   const { users, currentChat, messages } = useSelector((state) => state.chat);
-  const { user } = useSelector((state) => state.auth);  
-  const [text, setText] = useState('');
+  const { user } = useSelector((state) => state.auth); 
+  const [profileOpen, setProfileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   
   const chatPartner = currentChat?.members?.find(
@@ -34,12 +38,16 @@ export default function ChatPage() {
     dispatch(fetchMessages(res._id));
   };
 
-  const sendMessage = () => {
-    if (!text.trim()) return;
-    const sendForm = {chatId: currentChat._id, senderId: user._id, text}
-    dispatch(sendMessages(sendForm));
-    setText('');
+  const sendMessage = ({ text, file }) => {
+    dispatch(sendMessageWithFile({
+      chatId: currentChat._id,
+      senderId: user._id,
+      text,
+      file,
+      token: user.token,
+    }));
   };
+  
 
   const handleLogout = () => {
     dispatch(logout());
@@ -53,9 +61,11 @@ export default function ChatPage() {
         <div className="p-4 flex items-center justify-between border-b border-gray-700">
           {user && (
             <div className="flex items-center gap-2">
-                <div className="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold uppercase">
-                {user.username[0]}
-                </div>
+              <img
+                src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=0D8ABC&color=fff`}
+                alt="avatar"
+                className="w-[100px] h-[100px] rounded-full border-2 border-white-100 object-cover"
+              />
             </div>
           )}
           <button onClick={() => setMenuOpen(!menuOpen)}>
@@ -66,7 +76,7 @@ export default function ChatPage() {
         {/* Dropdown Menu */}
         {menuOpen && (
           <div className="bg-gray-800 text-sm px-4 py-2 border-b border-gray-700 space-y-2">
-            <div className="flex items-center gap-2 hover:text-blue-400 cursor-pointer">
+            <div className="flex items-center gap-2 hover:text-blue-400 cursor-pointer" onClick={() => setProfileOpen(true)}>
               <FiUser /> Profile
             </div>
             <div className="flex items-center gap-2 hover:text-blue-400 cursor-pointer">
@@ -117,32 +127,51 @@ export default function ChatPage() {
             </div>
           ) : (
             messages.map((m, i) => (
-              <div key={i} className="mb-3">
-                <span className="font-semibold text-blue-400">{m.sender.username}:</span>{' '}
-                <span>{m.text}</span>
+              <div key={i} className="mb-4 p-2 rounded-lg bg-gray-700">
+                <div className="font-semibold text-blue-400 mb-1">{m.sender.username}:</div>
+
+                {m.text && (
+                  <div className="text-white">{m.text}</div>
+                )}
+
+                {m.fileUrl && m.fileType?.startsWith('image/') && (
+                  <img
+                    src={m.fileUrl}
+                    alt="sent image"
+                    className="mt-2 w-[200px] h-[200px] max-w-xs rounded-lg border border-gray-600"
+                  />
+                )}
+
+                {m.fileUrl && m.fileType?.startsWith('video/') && (
+                  <video
+                    controls
+                    className="mt-2 max-w-xs rounded-lg border border-gray-600"
+                  >
+                    <source src={m.fileUrl} type={m.fileType} />
+                    Your browser does not support the video tag.
+                  </video>
+                )}
+
+                {m.fileUrl && m.fileType?.startsWith('audio/') && (
+                  <audio controls className="mt-2 w-full">
+                    <source src={m.fileUrl} type={m.fileType} />
+                    Your browser does not support the audio element.
+                  </audio>
+                )}
               </div>
             ))
           )}
         </div>
 
-        {currentChat && (
-          <div className="flex">
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="flex-1 p-3 rounded-l-lg bg-gray-700 border border-gray-600 text-white outline-none"
-              placeholder="Type your message..."
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            />
-            <button
-              onClick={sendMessage}
-              className="bg-blue-600 hover:bg-blue-700 px-6 text-white rounded-r-lg transition"
-            >
-              Send
-            </button>
-          </div>
-        )}
+        {currentChat && <ChatInput onSend={sendMessage} />}
+
+
       </div>
+      <ProfilePanel
+        user={user}
+        isOpen={profileOpen}
+        onClose={() => setProfileOpen(false)}
+      />
     </div>
   );
 }

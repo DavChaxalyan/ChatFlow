@@ -4,7 +4,7 @@ import socket from '../../socket';
 const API_URL = process.env.REACT_APP_API_URL;
 
 export const fetchUsers = createAsyncThunk('chat/fetchUsers', async () => {
-  const res = await axios.get(`${API_URL}/api/users`);
+  const res = await axios.get(`${API_URL}/api/users/users`);
   return res.data;
 });
 
@@ -18,11 +18,32 @@ export const fetchMessages = createAsyncThunk('chat/fetchMessages', async (chatI
     return res.data;
 });
 
-export const sendMessages = createAsyncThunk('chat/sendMessages', async (form) => {
-    const res = await axios.post(`${API_URL}/api/chat/${form.chatId}/messages`, form);
-    socket.emit('sendMessage', form);
-    return res.data;
-});
+export const sendMessageWithFile = createAsyncThunk(
+  'chat/sendMessageWithFile',
+  async ({ chatId, senderId, text, file, token }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append('chatId', chatId);
+      formData.append('senderId', senderId);
+      if (text) formData.append('text', text);
+      if (file) formData.append('file', file);
+
+      const res = await axios.post(`${API_URL}/api/messages/upload`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      socket.emit('sendMessage', res.data); // сразу отправляем по сокету
+
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 
 export const createGroupChat = createAsyncThunk(
     'chat/createGroup',
@@ -31,6 +52,31 @@ export const createGroupChat = createAsyncThunk(
       return res.data;
     }
 );  
+
+export const uploadFileMessage = createAsyncThunk(
+  'chat/uploadFileMessage',
+  async ({ file, chatId, senderId, token }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('chatId', chatId);
+      formData.append('senderId', senderId);
+
+      const res = await axios.post(`${API_URL}/api/messages/upload`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return res.data; 
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message
+      );
+    }
+  }
+);
 
 const chatSlice = createSlice({
   name: 'chat',
@@ -55,6 +101,12 @@ const chatSlice = createSlice({
       })
       .addCase(fetchMessages.fulfilled, (state, action) => {
         state.messages = action.payload;
+      })
+      .addCase(sendMessageWithFile.fulfilled, (state, action) => {
+        state.messages.push(action.payload);
+      })
+      .addCase(sendMessageWithFile.rejected, (state, action) => {
+        state.error = action.payload;
       });
   },
 });

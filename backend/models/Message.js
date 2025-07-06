@@ -4,7 +4,8 @@ const messageSchema = new mongoose.Schema({
   chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'Chat' },
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   text: { type: String },
-  media: { type: String, default: '' },
+  fileUrl: String,  
+  fileType: String, 
 }, { timestamps: true });
 
 module.exports = mongoose.model('Message', messageSchema);

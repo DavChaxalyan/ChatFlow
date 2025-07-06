@@ -41,6 +41,9 @@ const authSlice = createSlice({
         state.token = null;
         localStorage.removeItem('token');
       },
+      setUser(state, action) {
+        state.user = action.payload;
+      },
     },
     extraReducers: (builder) => {
       builder
@@ -55,12 +58,13 @@ const authSlice = createSlice({
         })
         .addCase(RegisterUser.fulfilled, (state, action) => {
           state.token = action.payload.token;
+          localStorage.setItem('token', action.payload.token);
         })
         .addCase(FetchMe.fulfilled, (state, action) => {
             state.user = action.payload;
-        });
+        })
     },
   });
 
-export const { logout } = authSlice.actions;
+export const { logout, setUser } = authSlice.actions;
 export default authSlice.reducer;

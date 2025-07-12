@@ -26,7 +26,14 @@ exports.getUserChats = async (req, res) => {
 };
 
 exports.getMessages = async (req, res) => {
-  const messages = await Message.find({ chatId: req.params.chatId }).populate('sender', 'username');
+  const chatId = req.params.chatId;
+  const userId = req.user._id;
+
+  await Message.updateMany(
+    { chatId, sender: { $ne: userId }, read: false },
+    { $set: { read: true } }
+  );
+  const messages = await Message.find({ chatId }).populate('sender', 'username');
   res.json(messages);
 };
 
@@ -36,6 +43,7 @@ exports.sendMessage = async (req, res) => {
     sender: req.user._id,
     chatId: req.params.chatId,
     text,
+    read: false,
   });
 
   const populatedMsg = await message.populate('sender', 'username');
@@ -58,5 +66,28 @@ exports.createGroupChat = async (req, res) => {
   
     await newGroup.populate('members', '-password');
     res.status(201).json(newGroup);
+  };
+  
+  exports.getUnreadMessagesCount = async (req, res) => {
+    try {
+      const messages = await Message.aggregate([
+        {
+          $match: {
+            read: false,
+            sender: { $ne: req.user._id },
+          },
+        },
+        {
+          $group: {
+            _id: '$chatId',
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+  
+      res.json(messages);
+    } catch (err) {
+      res.status(500).json({ message: 'Error getting unread messages' });
+    }
   };
   

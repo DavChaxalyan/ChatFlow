@@ -6,6 +6,7 @@ const messageSchema = new mongoose.Schema({
   text: { type: String },
   fileUrl: String,  
   fileType: String, 
+  read: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Message', messageSchema);

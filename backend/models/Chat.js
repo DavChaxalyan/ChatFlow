@@ -5,6 +5,7 @@ const chatSchema = new mongoose.Schema({
     isGroup: { type: Boolean, default: false },
     chatName: { type: String },
     admin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    backgroundUrl: { type: String, default: null }, 
 }, { timestamps: true });  
 
 module.exports = mongoose.model('Chat', chatSchema);

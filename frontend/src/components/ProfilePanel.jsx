@@ -105,7 +105,7 @@ export default function ProfilePanel({ user, isOpen, onClose }) {
                   type="email"
                   readOnly
                   value={form.email}
-                  className="pl-10 p-2 w-full rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="pl-10 p-2 w-full rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-[gray] cursor-auto"
                 />
               </div>
             </div>

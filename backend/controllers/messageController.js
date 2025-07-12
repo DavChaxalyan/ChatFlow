@@ -1,28 +1,39 @@
 const Message = require('../models/Message');
 
 exports.uploadMessageFile = async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded' });
-      }
-  
-      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-  
-      const message = await Message.create({
-        sender: req.user._id,
-        chatId: req.body.chatId,
-        text: req.body.text,
-        fileUrl: fileUrl, // ✅ Исправлено
-        fileType: req.file.mimetype, // ✅ добавим тип файла
-      });
-  
-      const populatedMessage = await message.populate('sender', 'username');
+  try {
+    const { chatId, text } = req.body;
+    const senderId = req.user._id;
 
-      req.io.to(req.body.chatId).emit('receiveMessage', populatedMessage);
-      res.status(201).json(populatedMessage);
-    } catch (err) {
-      console.error('❌ File upload error:', err);
-      res.status(500).json({ message: 'Internal Server Error', error: err.message });
+    if (!chatId) {
+      return res.status(400).json({ message: 'Chat ID is required' });
     }
-  };
+
+    const messageData = {
+      sender: senderId,
+      chatId,
+      read: false,
+    };
+
+    if (text) {
+      messageData.text = text;
+    }
+
+    if (req.file) {
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      messageData.fileUrl = fileUrl;
+      messageData.fileType = req.file.mimetype;
+    }
+
+    const message = await Message.create(messageData);
+    const populatedMessage = await message.populate('sender', 'username');
+
+    req.io.to(chatId).emit('receiveMessage', populatedMessage);
+    res.status(201).json(populatedMessage);
+  } catch (err) {
+    console.error('❌ Error sending message:', err);
+    res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
+};
+
   

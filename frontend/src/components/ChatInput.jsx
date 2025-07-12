@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
+import BackgroundSelector from './BackgroundSelector';
+import { useSelector } from 'react-redux';
 
 export default function ChatInput({ onSend }) {
   const [text, setText] = useState('');
@@ -8,6 +10,7 @@ export default function ChatInput({ onSend }) {
   const [recording, setRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [fileToSend, setFileToSend] = useState(null);
+  const { currentChat } = useSelector((state) => state.chat);
 
   const handleStartRecording = async () => {
     try {
@@ -69,6 +72,8 @@ export default function ChatInput({ onSend }) {
         >
           😄
         </button>
+
+        <BackgroundSelector chatId={currentChat._id} />
 
         {/* 🎤 Voice Recorder */}
         <button

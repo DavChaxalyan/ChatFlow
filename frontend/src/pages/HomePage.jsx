@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { FiSend, FiImage, FiVideo, FiSmile } from 'react-icons/fi';
+import appLogo from "../images/chat-app-icon.jpg"
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -7,7 +8,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1e1e2f] to-[#2d1b3c] text-white flex flex-col items-center justify-center px-4">
       {/* Hero Section */}
-      <div className="text-center max-w-2xl">
+      <div className="flex flex-col items-center justify-center text-center max-w-2xl">
+        <img className="w-[100px] h-[100px] mb-2 mt-3" src={appLogo} alt='logo-image' />
         <h1 className="text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">
           Welcome to ChatFlow
         </h1>

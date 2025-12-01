@@ -24,7 +24,7 @@ export default function ChatPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   
   const chatPartner = currentChat?.members?.find(
-      (m) => m._id !== user._id
+      (m) => m?._id !== user?._id
   );
 
   useEffect(() => {
